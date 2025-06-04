@@ -22,9 +22,53 @@ void parse_arguments(int argc, char **argv, arguments *args) {
 
     args->files_count = index;
 }
+
+#define MAX_LEN 128
+
+int read_file(char *path, char **buffer) {
+    int tmp_size = 0;
+    int tmp_capacity = MAX_LEN;
+    char *tmp = malloc(tmp_capacity * sizeof(char));
+    if(tmp==NULL) {
+        perror("malloc failed");
+        exit(1);
+    }
+    FILE *f = fopen(path, "r");
+    if(f == NULL) {
+        perror("fopen failed");
+        exit(1);
+    }
+
+    int size = 0;
+    do {
+        if(tmp_size + tmp_capacity >= tmp_capacity) {
+            tmp_capacity*=2;
+            tmp = realloc(tmp,tmp_capacity);
+            if(tmp==NULL) {
+                perror("realloc failed");
+                exit(1);
+            }
+        }
+
+        size = fread(tmp + tmp_size, sizeof(char), MAX_LEN, f);
+        tmp_size += size;
+    }while(size > 0);
+
+    fclose(f);
+    tmp[tmp_size] = '\0';
+    *buffer = tmp; 
+
+    return tmp_size;
+}
+
 int main(int argc, char **argv) {
     arguments args = {0};
     parse_arguments(argc, argv, &args);
-    printf("%d", args.files_count);
+    for(int i=0; i<args.files_count; i++) {
+        char* buffer = NULL;
+        int x = read_file(args.files[i], &buffer);
+        printf("%s", buffer);
+    }
+    
     return 0;
 }
