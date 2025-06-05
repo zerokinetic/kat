@@ -64,11 +64,25 @@ int read_file(char *path, char **buffer) {
 int main(int argc, char **argv) {
     arguments args = {0};
     parse_arguments(argc, argv, &args);
+
+    char *buffer = NULL;
+    int buffer_size = 0;
     for(int i=0; i<args.files_count; i++) {
-        char* buffer = NULL;
-        int x = read_file(args.files[i], &buffer);
-        printf("%s", buffer);
+        char* content = NULL;
+        int size = read_file(args.files[i], &content);
+
+        buffer = realloc(buffer, buffer_size + size + 1);
+        memcpy(buffer+buffer_size, content, size);
+        buffer_size += size;
+        buffer[buffer_size] = '\0';
+
+        free(content);
     }
+
+    free(args.files);
+    // printf("%s", buffer);
+    fwrite(buffer, sizeof(char), buffer_size, stdout);
+    free(buffer);
     
     return 0;
 }
